@@ -1,3 +1,4 @@
+import glob
 import os.path as osp
 import torch
 import torch.utils.data as data
@@ -51,7 +52,29 @@ class VideoTestDataset(data.Dataset):
                     self.imgs_LQ[subfolder_name] = util.read_img_seq(img_paths_LQ)
                     self.imgs_GT[subfolder_name] = util.read_img_seq(img_paths_GT)
         elif opt['name'].lower() in ['vimeo90k-test']:
-            pass  # TODO
+            subfolders_LQ = glob.glob('{:s}/*/*'.format(self.LQ_root))
+            subfolders_GT = glob.glob('{:s}/*/*'.format(self.GT_root))
+            for subfolder_LQ, subfolder_GT in zip(subfolders_LQ, subfolders_GT):
+                subfolder_name = osp.basename(subfolder_GT)
+                img_paths_LQ = util.glob_file_list(subfolder_LQ)
+                img_paths_GT = util.glob_file_list(subfolder_GT)
+                max_idx = len(img_paths_LQ)
+                assert max_idx == len(
+                    img_paths_GT), 'Different number of images in LQ and GT folders'
+                self.data_info['path_LQ'].extend(img_paths_LQ)
+                self.data_info['path_GT'].extend(img_paths_GT)
+                self.data_info['folder'].extend([subfolder_name] * max_idx)
+                for i in range(max_idx):
+                    self.data_info['idx'].append('{}/{}'.format(i, max_idx))
+                border_l = [0] * max_idx
+                for i in range(self.half_N_frames):
+                    border_l[i] = 1
+                    border_l[max_idx - i - 1] = 1
+                self.data_info['border'].extend(border_l)
+
+                if self.cache_data:
+                    self.imgs_LQ[subfolder_name] = util.read_img_seq(img_paths_LQ)
+                    self.imgs_GT[subfolder_name] = util.read_img_seq(img_paths_GT)
         else:
             raise ValueError(
                 'Not support video test dataset. Support Vid4, REDS4 and Vimeo90k-Test.')

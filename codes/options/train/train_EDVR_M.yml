@@ -1,58 +1,58 @@
 #### general settings
-name: 002_EDVR_EDVRwoTSAIni_lr4e-4_600k_REDS_LrCAR4S_fixTSA50k_new
-use_tb_logger: true
+name: qt_cinepak_1x
+use_tb_logger: false
 model: video_base
 distortion: sr
-scale: 4
-gpu_ids: [0,1,2,3,4,5,6,7]
+scale: 1
+gpu_ids: [0]
 
 #### datasets
 datasets:
   train:
-    name: REDS
-    mode: REDS
+    name: vimeo90k
+    mode: Vimeo90K
     interval_list: [1]
     random_reverse: false
     border_mode: false
-    dataroot_GT: ../datasets/REDS/train_sharp_wval.lmdb
-    dataroot_LQ: ../datasets/REDS/train_sharp_bicubic_wval.lmdb
-    cache_keys: ~
+    dataroot_GT: D:/datasets/vimeo_septuplet/train
+    dataroot_LQ: D:/datasets/vimeo_septuplet_cinepak/train
+    cache_keys: D:/datasets/vimeo_septuplet/train.pkl
 
-    N_frames: 5
+    N_frames: 7
     use_shuffle: true
-    n_workers: 3  # per GPU
-    batch_size: 32
+    n_workers: 8
+    batch_size: 8
     GT_size: 256
-    LQ_size: 64
-    use_flip: true
+    LQ_size: 256
+    use_flip: True
     use_rot: true
     color: RGB
   val:
-    name: REDS4
+    name: Vimeo90K-Test
     mode: video_test
-    dataroot_GT: ../datasets/REDS4/GT
-    dataroot_LQ: ../datasets/REDS4/sharp_bicubic
+    dataroot_GT: D:/datasets/vimeo_septuplet/test
+    dataroot_LQ: D:/datasets/vimeo_septuplet_cinepak/test
     cache_data: True
-    N_frames: 5
+    N_frames: 7
     padding: new_info
 
 #### network structures
 network_G:
   which_model_G: EDVR
   nf: 64
-  nframes: 5
+  nframes: 7
   groups: 8
   front_RBs: 5
   back_RBs: 10
   predeblur: false
-  HR_in: false
+  HR_in: true
   w_TSA: true
 
 #### path
 path:
-  pretrain_model_G: ../experiments/pretrained_models/EDVR_REDS_SR_M_woTSA.pth
+  # pretrain_model_G: ../experiments/qt_cinepak/models/93000_G.pth
   strict_load: false
-  resume_state: ~
+  # resume_state: ../experiments/qt_cinepak/training_state/72000.state
 
 #### training settings: learning rate scheme, loss
 train:
@@ -61,7 +61,7 @@ train:
   beta1: 0.9
   beta2: 0.99
   niter: 600000
-  ft_tsa_only: 50000
+  ft_tsa_only: 5000
   warmup_iter: -1  # -1: no warm up
   T_period: [50000, 100000, 150000, 150000, 150000]
   restarts: [50000, 150000, 300000, 450000]
@@ -70,11 +70,11 @@ train:
 
   pixel_criterion: cb
   pixel_weight: 1.0
-  val_freq: !!float 5e3
+  val_freq: !!float 1e3
 
   manual_seed: 0
 
 #### logger
 logger:
   print_freq: 100
-  save_checkpoint_freq: !!float 5e3
+  save_checkpoint_freq: !!float 1e3

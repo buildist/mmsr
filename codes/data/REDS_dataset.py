@@ -2,6 +2,7 @@
 REDS dataset
 support reading images from lmdb, image folder and memcached
 '''
+import torchvision
 import os.path as osp
 import random
 import pickle
@@ -74,6 +75,8 @@ class REDSDataset(data.Dataset):
                                 meminit=False)
         self.LQ_env = lmdb.open(self.opt['dataroot_LQ'], readonly=True, lock=False, readahead=False,
                                 meminit=False)
+        with self.LQ_env.begin() as txn:
+            self.LQ_keys = [ key for key, _ in txn.cursor() ]
 
     def _ensure_memcached(self):
         if self.mclient is None:
@@ -169,9 +172,10 @@ class REDSDataset(data.Dataset):
                     img_LQ = self._read_img_mc_BGR(self.LQ_root, name_a, '{:08d}'.format(v))
                 img_LQ = img_LQ.astype(np.float32) / 255.
             elif self.data_type == 'lmdb':
+                # print('{}_{:08d}'.format(name_a, v).encode('ascii'), '{}_{:08d}'.format(name_a, v).encode('ascii') in self.LQ_keys, self.LQ_keys[0])
                 img_LQ = util.read_img(self.LQ_env, '{}_{:08d}'.format(name_a, v), LQ_size_tuple)
             else:
-                img_LQ = util.read_img(None, img_LQ_path)
+                img_LQ = util.read_img(None, 'D:/Datasets/REDS/train_LR_cinepak/b/{:s}/{:08d}.png'.format(name_a, v))
             img_LQ_l.append(img_LQ)
 
         if self.opt['phase'] == 'train':

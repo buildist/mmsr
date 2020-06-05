@@ -117,7 +117,9 @@ def main():
                 logger.info('Total epochs needed: {:d} for iters {:,d}'.format(
                     total_epochs, total_iters))
         elif phase == 'val':
+            print('1')
             val_set = create_dataset(dataset_opt)
+            print('2')
             val_loader = create_dataloader(val_set, dataset_opt, opt, None)
             if rank <= 0:
                 logger.info('Number of val images in [{:s}]: {:d}'.format(
@@ -262,9 +264,9 @@ def main():
                         psnr_rlt = {}  # with border and center frames
                         psnr_rlt_avg = {}
                         psnr_total_avg = 0.
+                        i=0
                         for val_data in val_loader:
                             folder = val_data['folder'][0]
-                            idx_d = val_data['idx'].item()
                             # border = val_data['border'].item()
                             if psnr_rlt.get(folder, None) is None:
                                 psnr_rlt[folder] = []
@@ -278,7 +280,11 @@ def main():
                             # calculate PSNR
                             psnr = util.calculate_psnr(rlt_img, gt_img)
                             psnr_rlt[folder].append(psnr)
-                            pbar.update('Test {} - {}'.format(folder, idx_d))
+                            pbar.update('Test {}'.format(folder))
+                            util.save_img(rlt_img, 'val_{:d}_{:d}.png'.format(current_step, i))
+                            i += 1
+                            if i==3:
+                                break
                         for k, v in psnr_rlt.items():
                             psnr_rlt_avg[k] = sum(v) / len(v)
                             psnr_total_avg += psnr_rlt_avg[k]
